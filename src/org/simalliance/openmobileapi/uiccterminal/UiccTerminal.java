@@ -93,13 +93,16 @@ public final class UiccTerminal extends Service {
     private OpenLogicalChannelResponse iccOpenLogicalChannel(String aid, byte p2)
             throws NoSuchElementException, MissingResourceException, IOException {
         Log.d(TAG, "iccOpenLogicalChannel > " + aid);
+        Log.d(TAG, "iccOpenLogicalChannel NOTE: we will ignore the  second parameter 'p2':  " + p2);
         // Remove any previously stored selection response
         IccOpenLogicalChannelResponse response;
-        if (p2 == 0) {
-            response = mTelephonyManager.iccOpenLogicalChannel(aid);
-        } else {
-            response = mTelephonyManager.iccOpenLogicalChannel(aid, p2);
-        }
+        //if (p2 == 0) {
+        // NOTE: as we don't want to modify the system, we always call the "iccOpenLogicalChannel"
+        // without the second parameter.
+        response = mTelephonyManager.iccOpenLogicalChannel(aid);
+        //} else {
+        //    response = mTelephonyManager.iccOpenLogicalChannel(aid, p2);
+        //}
         int status = response.getStatus();
         if (status != IccOpenLogicalChannelResponse.STATUS_NO_ERROR) {
             Log.d(TAG, "iccOpenLogicalChannel failed.");
@@ -242,14 +245,23 @@ public final class UiccTerminal extends Service {
 
         @Override
         public byte[] getAtr() {
-            if (mAtr == null) {
-                String atr = mTelephonyManager.iccGetAtr();
-                Log.d(TAG, "atr = " + (atr == null ? "" : atr));
-                if (atr != null && !"".equals(atr)) {
-                    mAtr = ByteArrayConverter.hexStringToByteArray(atr);
-                }
-            }
-            return mAtr;
+            //    if (mAtr == null) {
+            //        String atr = mTelephonyManager.iccGetAtr();
+            //        Log.d(TAG, "atr = " + (atr == null ? "" : atr));
+            //        if (atr != null && !"".equals(atr)) {
+            //            mAtr = ByteArrayConverter.hexStringToByteArray(atr);
+            //        }
+            //    }
+            //    return mAtr;
+
+            // As TelephonyManager in API Level 23 doesn't give us access to the ATR
+            // and we want to keep the system unmodified, we just return null.
+            // 
+            // We cannot throw exceptions over IPC process boundaries, so for now just let's return null..
+            // throw new UnsupportedOperationException("getAtr() is not supported on this Android Platform");
+            // 
+            Log.d(TAG, "getAtr NOTE: getAtr() is not supported on unmodified Android platforms. Will simply return 'null'.");
+            return null;
         }
 
         @Override
